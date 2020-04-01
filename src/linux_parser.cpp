@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <string>
 #include <vector>
+#include <cassert>
 
 #include "linux_parser.h"
 
@@ -35,13 +36,13 @@ string LinuxParser::OperatingSystem() {
 
 // DONE: An example of how to read data from the filesystem
 string LinuxParser::Kernel() {
-  string os, kernel;
+  string os, version, kernel;
   string line;
   std::ifstream stream(kProcDirectory + kVersionFilename);
   if (stream.is_open()) {
     std::getline(stream, line);
     std::istringstream linestream(line);
-    linestream >> os >> kernel;
+    linestream >> os >> version >> kernel;
   }
   return kernel;
 }
@@ -67,10 +68,40 @@ vector<int> LinuxParser::Pids() {
 }
 
 // TODO: Read and return the system memory utilization
-float LinuxParser::MemoryUtilization() { return 0.0; }
+float LinuxParser::MemoryUtilization() { 
+  int memTotal{0}, memFree{0};
+  int cnt{0};  // count how many lines have been parsed 
+  string line;
+  string key;
+  string value;
+  std::ifstream filestream(kProcDirectory + kMeminfoFilename);
+  if (filestream.is_open()) {
+    while (std::getline(filestream, line) && cnt < 2) {
+      std::replace(line.begin(), line.end(), ':', ' ');
+      std::istringstream linestream{line};
+      if (linestream >> key >> value) {
+        if (key == "MemTotal") memTotal = std::stoi(value);
+        if (key == "MemFree") memFree = std::stoi(value);
+      }
+      cnt++;
+    }
+  }
+  // calculate memory usage
+  return 100.0f * (memTotal-memFree) / memTotal; 
+}
 
 // TODO: Read and return the system uptime
-long LinuxParser::UpTime() { return 0; }
+long LinuxParser::UpTime() { 
+  string upTime, timeInIdle;
+  string line;
+  std::ifstream stream(kProcDirectory + kUptimeFilename);
+  if (stream.is_open()) {
+    std::getline(stream, line);
+    std::istringstream linestream{line};
+    linestream >> upTime >> timeInIdle;
+  }
+  return std::stol(upTime); 
+}
 
 // TODO: Read and return the number of jiffies for the system
 long LinuxParser::Jiffies() { return 0; }
@@ -86,13 +117,63 @@ long LinuxParser::ActiveJiffies() { return 0; }
 long LinuxParser::IdleJiffies() { return 0; }
 
 // TODO: Read and return CPU utilization
-vector<string> LinuxParser::CpuUtilization() { return {}; }
+vector<string> LinuxParser::CpuUtilization() { 
+  string line;
+  string value;
+  vector<string> out;
+  std::ifstream filestream{kProcDirectory + kStatFilename};
+  // get first line only
+  if (filestream.is_open()) {
+    if (std::getline(filestream, line)) {
+      std::istringstream linestream{line};
+      bool skipped_cpu{false};
+      while (linestream >> value) {
+        // skip first value (cpuN) 
+        if (!skipped_cpu) {
+          skipped_cpu = true;
+          continue;
+        }
+        // store value to output array
+        out.push_back(value);
+      }
+    }
+  }
+  // check size of out
+  assert(out.size() == 10);
+  return out;
+}
 
 // TODO: Read and return the total number of processes
-int LinuxParser::TotalProcesses() { return 0; }
+int LinuxParser::TotalProcesses() { 
+  string line;
+  string key, value;
+  std::ifstream filestream{kProcDirectory + kStatFilename};
+  if (filestream.is_open()) {
+    while (std::getline(filestream, line)) {
+      std::istringstream linestream{line};
+      if (linestream >> key >> value) {  // extract first 2 elements of each line
+        if (key == "processes") return std::stoi(value);
+      }
+    }
+  }
+  return -1;  // fail to look for total processes 
+}
 
 // TODO: Read and return the number of running processes
-int LinuxParser::RunningProcesses() { return 0; }
+int LinuxParser::RunningProcesses() { 
+  string line;
+  string key, value;
+  std::ifstream filestream{kProcDirectory + kStatFilename};
+  if (filestream.is_open()) {
+    while (std::getline(filestream, line)) {
+      std::istringstream linestream{line};
+      if (linestream >> key >> value) {  // extract first 2 elements of each line
+        if (key == "procs_running") return std::stoi(value);
+      }
+    }
+  }
+  return -1;  // fail to look for RunningProcesses
+}
 
 // TODO: Read and return the command associated with a process
 // REMOVE: [[maybe_unused]] once you define the function
