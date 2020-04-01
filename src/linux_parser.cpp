@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <cassert>
+#include <algorithm>
 
 #include "linux_parser.h"
 
@@ -87,7 +88,7 @@ float LinuxParser::MemoryUtilization() {
     }
   }
   // calculate memory usage
-  return 100.0f * (memTotal-memFree) / memTotal; 
+  return 1.0f * (memTotal-memFree) / memTotal; 
 }
 
 // TODO: Read and return the system uptime
@@ -199,7 +200,7 @@ string LinuxParser::Ram(int pid) {
       }
     }
   }
-  return string(); 
+  return "0"; 
 }
 
 // TODO: Read and return the user ID associated with a process
@@ -257,4 +258,27 @@ long LinuxParser::UpTime(int pid) {
     }
   }
   return 0; 
+}
+
+// Parse /proc/[PID]/stat for calculation of proc's CPU Utilization
+vector<string> LinuxParser::ProcCpuUtil(int pid) {
+  string value;
+  string line;
+  vector<string> out;
+  vector<int> timeInfoPos{14, 15, 16, 17, 22};  // position of time related info
+  std::ifstream stream{kProcDirectory + std::to_string(pid) + kStatFilename};
+  if (stream.is_open()) {
+    std::getline(stream, line);
+    std::istringstream linestream{line};
+    int cnt = 1;  // for counting how many info have been extracted
+    while (linestream >> value && cnt < 23) {  // no need to extract unused info
+      // check if cnt is in timeInfoPos
+      if (std::find(timeInfoPos.begin(), timeInfoPos.end(), cnt) != timeInfoPos.end()) {
+        // found
+        out.push_back(value);
+      } 
+      cnt++;
+    }
+  }
+  return out;
 }
