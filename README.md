@@ -1,41 +1,38 @@
 # CppND-System-Monitor
 
-Starter code for System Monitor Project in the Object Oriented Programming Course of the [Udacity C++ Nanodegree Program](https://www.udacity.com/course/c-plus-plus-nanodegree--nd213). 
+My submission for System Monitor Project in the Object Oriented Programming Course of the [Udacity C++ Nanodegree Program](https://www.udacity.com/course/c-plus-plus-nanodegree--nd213). 
 
-Follow along with the classroom lesson to complete the project!
+![System Monitor](images/quan-monitor.png)
 
-![System Monitor](images/monitor.png)
+## Instalation
 
-## Udacity Linux Workspace
-[Udacity](https://www.udacity.com/) provides a browser-based Linux [Workspace](https://engineering.udacity.com/creating-a-gpu-enhanced-virtual-desktop-for-udacity-497bdd91a505) for students. 
+The monitor is rendered using [ncurses](https://www.gnu.org/software/ncurses/). Install `ncurses` with
 
-You are welcome to develop this project on your local machine, and you are not required to use the Udacity Workspace. However, the Workspace provides a convenient and consistent Linux development environment we encourage you to try.
+```
+sudo apt install libncurses5-dev libncursesw5-dev
+```
 
-## ncurses
-[ncurses](https://www.gnu.org/software/ncurses/) is a library that facilitates text-based graphical output in the terminal. This project relies on ncurses for display output.
+To make the project, execute the following command in the project's top directory
 
-Within the Udacity Workspace, `.student_bashrc` automatically installs ncurses every time you launch the Workspace.
+```
+make build
+```
 
-If you are not using the Workspace, install ncurses within your own Linux environment: `sudo apt install libncurses5-dev libncursesw5-dev`
+This command creates a new directory name `build` where the resulted executable `monitor` is resigned.
 
-## Make
-This project uses [Make](https://www.gnu.org/software/make/). The Makefile has four targets:
-* `build` compiles the source code and generates an executable
-* `format` applies [ClangFormat](https://clang.llvm.org/docs/ClangFormat.html) to style the source code
-* `debug` compiles the source code and generates an executable, including debugging symbols
-* `clean` deletes the `build/` directory, including all of the build artifacts
+## Getting Started
 
-## Instructions
+This project is made of 3 classes defined in `system.h`, `process.h`, and `processor.h` together with 1 namespace defined in `linux_parser.h`.
 
-1. Clone the project repository: `git clone https://github.com/udacity/CppND-System-Monitor-Project-Updated.git`
+* Linux Parser namespace
+  - This namespace is a collection of functions, each of which parses a specific system file to retrieve information for the monitor.
 
-2. Build the project: `make build`
+* System class
+  - This class computes system related statistics (e.g. OS name, memory usage, cpu usage)
+  - It's also a compound of two other class Processor and Process to aggregate information relates to cpu (processor) and processes and distribute them to the monitor 
 
-3. Run the resulting executable: `./build/monitor`
-![Starting System Monitor](images/starting_monitor.png)
+* Process class
+  - Collects process information such as pid, memory usage, user
 
-4. Follow along with the lesson.
-
-5. Implement the `System`, `Process`, and `Processor` classes, as well as functions within the `LinuxParser` namespace.
-
-6. Submit!
+* Processor class
+  - Computes system's CPU usage
